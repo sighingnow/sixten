@@ -44,7 +44,7 @@ checkTopLevelDefType
   -> SourceLoc
   -> AbstractM
   -> Infer (Definition Abstract.Expr MetaA, AbstractM)
-checkTopLevelDefType v def loc typ = located (render loc) $ case def of
+checkTopLevelDefType v def loc typ = located loc $ case def of
   Concrete.TopLevelPatDefinition def' -> checkDefType def' typ
   Concrete.TopLevelPatDataDefinition d -> checkDataType v d typ
   -- Should be removed by Declassify:

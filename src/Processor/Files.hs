@@ -9,7 +9,7 @@ import Data.List
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty(NonEmpty)
 import Data.Semigroup
-import qualified Data.Text as Text
+import qualified Data.Text.Prettyprint.Doc as PP
 import GHC.IO.Handle
 import System.FilePath
 
@@ -43,14 +43,15 @@ instance Monoid ProcessFilesResult where
     = ProcessFilesResult (mappend c1 c2) (mappend l1 l2)
 
 checkFiles :: Arguments -> IO (Result ())
-checkFiles = processFilesWith $
-                mapM (processModulesWith (File.frontend (const $ return [])))
-                  >=> mapM (const $ return ())
+checkFiles
+  = processFilesWith
+  $ mapM (processModulesWith (File.frontend (const $ return [])))
+    >=> return . void
 
 processFiles :: Arguments -> IO (Result ProcessFilesResult)
-processFiles args = processFilesWith 
-                      (mapM (processModulesWith File.process) 
-                        >=> mapM (writeModules $ assemblyDir args)) args
+processFiles args
+  = processFilesWith (mapM (processModulesWith File.process)
+  >=> mapM (writeModules $ assemblyDir args)) args
 
 processFilesWith
   :: (Result [Module (HashMap QName (SourceLoc, Unscoped.TopLevelDefinition))] -> VIX (Result a))
@@ -66,7 +67,7 @@ processFilesWith f args = do
   let modulesResult = sconcat moduleResults
   result <- runVIX (f modulesResult) (target args) (logHandle args) (verbosity args)
   return $ case result of
-    Left err -> Failure $ pure $ TypeError $ Text.pack err
+    Left err -> Failure $ pure $ typeError (PP.pretty err) Nothing mempty
     Right (Failure err) -> Failure err
     Right (Success res) -> Success res
 

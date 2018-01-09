@@ -12,12 +12,11 @@ import Data.Monoid
 import Data.Text(Text)
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
+import qualified Data.Text.Prettyprint.Doc as PP
 import qualified Data.Vector as Vector
 import Data.Void
+import Error
 import System.IO
-import qualified Text.PrettyPrint.ANSI.Leijen as Leijen
-import qualified Text.Trifecta as Trifecta
-import Text.Trifecta.Result(Err(Err), explain)
 
 import Analysis.Denat
 import qualified Analysis.ReturnDirection as ReturnDirection
@@ -325,11 +324,7 @@ writeModule modul llOutputFile externOutputFiles = do
 parse
   :: FilePath
   -> IO (Result (Module [(SourceLoc, Unscoped.TopLevelDefinition)]))
-parse file = do
-  parseResult <- Parse.parseFromFileEx Parse.modul file
-  case parseResult of
-    Trifecta.Failure f -> return $ Failure $ pure $ SyntaxError $ Trifecta._errDoc f
-    Trifecta.Success res -> return $ Success res
+parse = Parse.parseFromFileEx Parse.modul
 
 dupCheck
   :: Module [(SourceLoc, Unscoped.TopLevelDefinition)]
@@ -350,19 +345,15 @@ dupCheck m = forM m $ flip evalStateT (0 :: Int) . foldM go mempty
         let (prevLoc, _) = defs HashMap.! qname
         lift $ Failure
           $ pure
-          $ TypeError
-          $ err loc "Duplicate definition"
-          [ "Previous definition at " <> Leijen.pretty (delta prevLoc)
-          , Leijen.pretty prevLoc
-          ]
+          $ typeError
+            "Duplicate definition"
+            (Just loc)
+            $ PP.vcat
+              [ "Previous definition at " <> pretty prevLoc
+              , pretty prevLoc
+              ]
       else return $ HashMap.insert qname (loc, def) defs
       where
         replaceSpaces (Name n) = Name $ Text.map replaceSpace n
         replaceSpace ' ' = '-'
         replaceSpace c = c
-
-    err :: SourceLoc -> Doc -> [Doc] -> Text
-    err loc heading docs
-      = shower
-      $ explain loc
-      $ Err (Just heading) docs mempty mempty

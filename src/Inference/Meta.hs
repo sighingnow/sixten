@@ -332,7 +332,7 @@ showMeta x = do
     $ pretty (sv <$> x)
     <> if null solutions
       then mempty
-      else text ", metavars: " <> pretty solutions
+      else ", metavars: " <> pretty solutions
   where
     refType (Exists _) = "∃"
     refType Forall = ""

@@ -11,7 +11,7 @@ import System.Process
 import qualified Command.Check.Options as Check
 import qualified Command.Compile as Compile
 import qualified Command.Compile.Options as Compile
-import qualified Processor.Result as Processor
+import Error
 
 data Options = Options
   { expectedOutputFile :: Maybe FilePath
@@ -49,14 +49,14 @@ test :: Options -> IO ()
 test opts = Compile.compile (compileOptions opts) onCompileError onCompileSuccess
   where
     onCompileError errs = case errs of
-      Processor.SyntaxError _:_
+      Error SyntaxError _ _ _:_
         | expectSyntaxError opts -> success
-        | otherwise -> failed "No syntax error" $ mapM_ Processor.printError errs
-      Processor.TypeError _:_
+        | otherwise -> failed "No syntax error" $ mapM_ printError errs
+      Error TypeError _ _ _:_
         | expectTypeError opts -> success
-        | otherwise -> failed "No type error" $ mapM_ Processor.printError errs
-      Processor.CommandLineError _:_
-        -> failed "No command-line error" $ mapM_ Processor.printError errs
+        | otherwise -> failed "No type error" $ mapM_ printError errs
+      Error CommandLineError _ _ _:_
+        -> failed "No command-line error" $ mapM_ printError errs
       [] -> failed "No unknown error" (return ())
     onCompileSuccess f
       | expectSyntaxError opts = failed "Syntax error" $ putStrLn "Successful compilation"

@@ -23,9 +23,9 @@ import Data.Void
 import Data.Word
 import qualified LLVM.IRBuilder as IRBuilder
 import System.IO
-import Text.Trifecta.Result(Err(Err), explain)
 
 import Backend.Target as Target
+import Error
 import Syntax
 import Syntax.Abstract
 import qualified Syntax.Sized.Lifted as Lifted
@@ -34,7 +34,7 @@ import Util.MultiHashMap(MultiHashMap)
 import qualified Util.MultiHashMap as MultiHashMap
 
 data VIXState = VIXState
-  { vixLocation :: SourceLoc
+  { vixLocation :: Maybe SourceLoc
   , vixContext :: HashMap QName (Definition Expr Void, Type Void)
   , vixModuleNames :: MultiHashMap ModuleName (Either QConstr QName)
   , vixConvertedSignatures :: HashMap QName Lifted.FunSignature
@@ -59,7 +59,7 @@ class Monad m => MonadVIX m where
 
 emptyVIXState :: Target -> Handle -> Int -> VIXState
 emptyVIXState target handle verbosity = VIXState
-  { vixLocation = mempty
+  { vixLocation = Nothing
   , vixContext = mempty
   , vixModuleNames = mempty
   , vixConvertedSignatures = mempty
@@ -108,12 +108,12 @@ fresh = liftVIX $ do
 located :: MonadVIX m => SourceLoc -> m a -> m a
 located loc m = do
   oldLoc <- liftVIX $ gets vixLocation
-  liftVIX $ modify $ \s -> s { vixLocation = loc }
+  liftVIX $ modify $ \s -> s { vixLocation = Just loc }
   res <- m
   liftVIX $ modify $ \s -> s { vixLocation = oldLoc }
   return res
 
-currentLocation :: MonadVIX m => m SourceLoc
+currentLocation :: MonadVIX m => m (Maybe SourceLoc)
 currentLocation = liftVIX $ gets vixLocation
 
 -------------------------------------------------------------------------------
@@ -163,7 +163,6 @@ addContext prog = liftVIX $ modify $ \s -> s
             (Global className, _) -> HashMap.singleton className [(defName, typ)]
             _ -> mempty
 
-
 throwLocated
   :: (MonadError String m, MonadVIX m)
   => Doc
@@ -172,8 +171,8 @@ throwLocated x = do
   loc <- currentLocation
   throwError
     $ show
-    $ explain loc
-    $ Err (Just $ pretty x) mempty mempty mempty
+    $ pretty
+    $ typeError x loc mempty
 
 definition
   :: (MonadVIX m, MonadError String m)
