@@ -56,7 +56,7 @@ tcPats
   -> Infer (Vector (Abstract.Pat AbstractM MetaA, AbstractM, AbstractM), Vector MetaA)
 tcPats pats vs tele = do
   unless (Vector.length pats == teleLength tele)
-    $ throwError "tcPats length mismatch"
+    $ internalError "tcPats length mismatch"
   results <- iforTeleWithPrefixM tele $ \i _ _ s prefix -> do
     let argExprs = snd3 . fst <$> prefix
         vs' | Vector.null prefix = vs
@@ -159,7 +159,7 @@ tcPat' p pat vs expected = case pat of
     (pat'', patExpr, vs') <- checkPat p pat' vs patType'
     (pat''', patExpr') <- instPatExpected expected patType' pat'' patExpr
     return (pat''', patExpr', vs')
-  Concrete.ViewPat _ _ -> throwError "tcPat ViewPat undefined TODO"
+  Concrete.ViewPat _ _ -> internalError "tcPat ViewPat undefined TODO"
   Concrete.PatLoc loc pat' -> located loc $ tcPat' p pat' vs expected
 
 instPatExpected

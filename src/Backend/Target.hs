@@ -51,7 +51,7 @@ architectures = architecture <$> targets
 findTarget :: String -> Either Error Target
 findTarget arch = case List.find ((== arch) . architecture) targets of
   Nothing -> Left
-    $ Error CommandLineError
+    $ CommandLineError
     ("There is no target architecture called " <> annotate (color Red) (pretty arch) <> ".")
     Nothing
     ("Available targets are: "

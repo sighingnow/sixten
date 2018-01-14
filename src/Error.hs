@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, PatternSynonyms #-}
 module Error where
 
 import Data.Monoid
@@ -37,15 +37,17 @@ locationRendering src = prettyPosition
   (sourceLocHighlights src)
 
 data ErrorKind
-  = SyntaxError
-  | TypeError
-  | CommandLineError
+  = SyntaxErrorKind
+  | TypeErrorKind
+  | CommandLineErrorKind
+  | InternalErrorKind
   deriving Show
 
 instance Pretty ErrorKind where
-  pretty SyntaxError = "Syntax error"
-  pretty TypeError = "Type error"
-  pretty CommandLineError = "Command-line error"
+  pretty SyntaxErrorKind = "Syntax error"
+  pretty TypeErrorKind = "Type error"
+  pretty CommandLineErrorKind = "Command-line error"
+  pretty InternalErrorKind = "Internal compiler error"
 
 data Error = Error
   { errorKind :: !ErrorKind
@@ -54,12 +56,17 @@ data Error = Error
   , errorFootnote :: !Doc
   } deriving Show
 
-syntaxError, typeError :: Doc -> Maybe SourceLoc -> Doc -> Error
-syntaxError = Error SyntaxError
-typeError = Error TypeError
+pattern SyntaxError :: Doc -> Maybe SourceLoc -> Doc -> Error
+pattern SyntaxError s l f = Error SyntaxErrorKind s l f
 
-commandLineError :: Doc -> Doc -> Error
-commandLineError h = Error CommandLineError h Nothing
+pattern TypeError :: Doc -> Maybe SourceLoc -> Doc -> Error
+pattern TypeError s l f = Error TypeErrorKind s l f
+
+pattern CommandLineError :: Doc -> Maybe SourceLoc -> Doc -> Error
+pattern CommandLineError s l f = Error CommandLineErrorKind s l f
+
+pattern InternalError :: Doc -> Maybe SourceLoc -> Doc -> Error
+pattern InternalError s l f = Error InternalErrorKind s l f
 
 instance Pretty Error where
   pretty (Error kind summary (Just loc) footnote)

@@ -49,13 +49,13 @@ test :: Options -> IO ()
 test opts = Compile.compile (compileOptions opts) onCompileError onCompileSuccess
   where
     onCompileError errs = case errs of
-      Error SyntaxError _ _ _:_
+      SyntaxError {}:_
         | expectSyntaxError opts -> success
         | otherwise -> failed "No syntax error" $ mapM_ printError errs
-      Error TypeError _ _ _:_
+      TypeError {}:_
         | expectTypeError opts -> success
         | otherwise -> failed "No type error" $ mapM_ printError errs
-      Error CommandLineError _ _ _:_
+      CommandLineError {}:_
         -> failed "No command-line error" $ mapM_ printError errs
       [] -> failed "No unknown error" (return ())
     onCompileSuccess f

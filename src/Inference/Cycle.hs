@@ -38,9 +38,7 @@ detectTypeRepCycles defs = do
       printedHeadVar <- showVar headVar
       printedCycle <- mapM showVar $ drop 1 firstCycle ++ [headVar]
       throwError
-        $ show
-        $ pretty
-        $ typeError
+        $ TypeError
           "Type has potentially infinite memory representation"
           (Just loc)
           $ PP.vcat
@@ -109,9 +107,7 @@ detectDefCycles defs = do
             printedVar <- showVar var
             printedOccs <- mapM showVar $ HashSet.toList circularOccs
             throwError
-              $ show
-              $ pretty
-              $ typeError
+              $ TypeError
                 "Circular definition"
                 (Just loc)
                 $ PP.vcat

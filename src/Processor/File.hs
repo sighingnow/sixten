@@ -236,7 +236,7 @@ slamGroup
   -> VIX [(QName, SLambda.Expr Void)]
 slamGroup defs = forM defs $ \(x, d, _t) -> do
   d' <- SLam.slamDef $ vacuous d
-  d'' <- traverse (throwError . ("slamGroup " ++) . show) d'
+  d'' <- traverse (internalError . ("slamGroup" PP.<+>) . shower) d'
   return (x, d'')
 
 denatGroup
@@ -345,7 +345,7 @@ dupCheck m = forM m $ flip evalStateT (0 :: Int) . foldM go mempty
         let (prevLoc, _) = defs HashMap.! qname
         lift $ Failure
           $ pure
-          $ typeError
+          $ TypeError
             "Duplicate definition"
             (Just loc)
             $ PP.vcat

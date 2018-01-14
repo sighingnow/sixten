@@ -51,7 +51,7 @@ parseFromFileEx p fp = do
   return $ case res of
     Parsix.Failure e -> Failure
       $ pure
-      $ syntaxError
+      $ SyntaxError
         (pretty $ fromMaybe mempty $ Parsix.errorReason e)
         (Just loc)
         $ case Set.toList $ Parsix.errorExpected e of

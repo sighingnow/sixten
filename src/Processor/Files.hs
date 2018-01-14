@@ -5,7 +5,6 @@ import Control.Monad.Except
 import Data.HashMap.Lazy(HashMap)
 import qualified Data.HashMap.Lazy as HashMap
 import qualified Data.HashSet as HashSet
-import Data.List
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty(NonEmpty)
 import Data.Semigroup
@@ -67,8 +66,8 @@ processFilesWith f args = do
   let modulesResult = sconcat moduleResults
   result <- runVIX (f modulesResult) (target args) (logHandle args) (verbosity args)
   return $ case result of
-    Left err -> Failure $ pure $ typeError (PP.pretty err) Nothing mempty
-    Right (Failure err) -> Failure err
+    Left err -> Failure $ pure err
+    Right (Failure errs) -> Failure errs
     Right (Success res) -> Success res
 
 processModulesWith
@@ -81,10 +80,16 @@ processModulesWith f (builtins1 : builtins2 : modules) = do
   let orderedModules = moduleDependencyOrder modules
   results <- forM orderedModules $ \moduleGroup -> case moduleGroup of
     AcyclicSCC modul -> traverse (const $ f modul) modul
-    CyclicSCC ms -> throwError -- TODO: Could be allowed?
-      $ "Circular modules: " ++ intercalate ", " (fromModuleName . moduleName <$> ms)
+    CyclicSCC ms -> throwError
+      -- TODO: Could be allowed?
+      -- TODO: Maybe this should be a different kind of error?
+      $ TypeError
+        ("Circular modules:"
+        PP.<+> PP.hsep (PP.punctuate PP.comma $ fromModuleName . moduleName <$> ms))
+        Nothing
+        mempty
   return $ builtinModule : results
-processModulesWith _ _ = error "processModules"
+processModulesWith _ _ = internalError "processModules"
 
 processBuiltins
   :: Module (HashMap QName (SourceLoc, Unscoped.TopLevelDefinition))
