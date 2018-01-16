@@ -57,6 +57,8 @@ test opts = Compile.compile (compileOptions opts) onCompileError onCompileSucces
         | otherwise -> failed "No type error" $ mapM_ printError errs
       CommandLineError {}:_
         -> failed "No command-line error" $ mapM_ printError errs
+      InternalError {}:_
+        -> failed "No internal error" $ mapM_ printError errs
       [] -> failed "No unknown error" (return ())
     onCompileSuccess f
       | expectSyntaxError opts = failed "Syntax error" $ putStrLn "Successful compilation"

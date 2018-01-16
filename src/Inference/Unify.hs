@@ -37,8 +37,8 @@ occurs cxt l tv expr = traverse_ go expr
           expect <- showMeta t2'
           return
             [ ""
-            , annotate bold "Inferred: " <> annotate (color Red) actual
-            , annotate bold "Expected: " <> annotate (colorDull Green) expect
+            , annotate bold "Inferred:" PP.<+> annotate (color Red) actual
+            , annotate bold "Expected:" PP.<+> annotate (colorDull Green) expect
             ]
         printedTv <- showMeta (pure tv' :: AbstractM)
         expr' <- zonk expr
@@ -96,8 +96,8 @@ unify' cxt type1 type2
         expect <- showMeta t2'
         return
           [ ""
-          , annotate bold "Inferred: " <> annotate (color Red) actual
-          , annotate bold "Expected: " <> annotate (colorDull Green) expect
+          , annotate bold "Inferred:" PP.<+> annotate (color Red) actual
+          , annotate bold "Expected:" PP.<+> annotate (colorDull Green) expect
           ]
       throwLocated
         $ "Type mismatch" <> PP.line <>

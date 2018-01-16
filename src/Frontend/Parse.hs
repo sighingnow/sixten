@@ -15,6 +15,7 @@ import Data.String
 import Data.Text(Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Prettyprint.Doc as PP
+import Debug.Trace
 import qualified Data.Vector as Vector
 import qualified Text.Parser.LookAhead as LookAhead
 import qualified Text.Parser.Token.Highlight as Highlight
@@ -188,10 +189,14 @@ qname :: Parser QName
 qname = Parsix.ident qidStyle
 
 constructor :: Parser Constr
-constructor = Parsix.ident idStyle
+constructor
+  = Parsix.highlight Highlight.Constructor
+  $ Parsix.ident idStyle
 
 qconstructor :: Parser QConstr
-qconstructor = Parsix.ident qidStyle
+qconstructor
+  = Parsix.highlight Highlight.Constructor
+  $ Parsix.ident qidStyle
 
 modulName :: Parser ModuleName
 modulName = Parsix.ident qidStyle
@@ -215,11 +220,11 @@ integer = Parsix.try Parsix.integer
 
 located :: Parser a -> Parser (SourceLoc, a)
 located p = do
-  (s, a) <- Parsix.spanned p
+  (s, a) <- Parsix.highlight Highlight.Constructor $ Parsix.spanned p
   file <- asks parseEnvSourceFile
   inp <- Parser $ lift Parsix.input
   hl <- Parser $ lift Parsix.highlights
-  return (SourceLocation file s inp hl, a)
+  trace (show hl) $ return (SourceLocation file s inp hl, a)
 
 -------------------------------------------------------------------------------
 -- * Patterns
