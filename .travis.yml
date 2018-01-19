@@ -17,7 +17,7 @@ before_install:
 
 script:
 - stack test
-- stack test --test-arguments "--sixten-args -O2"
+- stack test --test-arguments "-e --sixten-args -O2"
 
 cache:
   directories:

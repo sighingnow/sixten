@@ -12,6 +12,7 @@ import Test.Tasty.Program (testProgram)
 main :: IO ()
 main = do
   input <- testInput
+  print input
   defaultMainWithIngredients ings . askOption $ \args -> mkTestGrp args input
     where
       ings = includingOptions [Option (Proxy :: Proxy Args)] :
@@ -67,4 +68,4 @@ mkTestGrp :: Args -> [(TestName, [String])] -> TestTree
 mkTestGrp (A a) = testGroup "End to end tests" . fmap mkTest
   where
     mkTest (name, xs) =
-      testProgram name "sixten" ("compile" : (words a)) Nothing
+      testProgram name "sixten" ("test" : (words a ++ xs)) Nothing
