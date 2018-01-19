@@ -16,7 +16,7 @@ before_install:
 - stack ${STACK_FLAGS} setup
 
 script:
-- stack test
+- stack test --test-arguments "-e"
 - stack test --test-arguments "-e --sixten-args -O2"
 
 cache:
