@@ -171,5 +171,5 @@ assemble clang opts objFiles outFile = do
   callProcess clang
     $ concatMap words (lines ldFlags)
     ++ optimisationFlags opts
-    ++ ["-flto"]
+    -- ++ ["-flto"]
     ++ objFiles ++ ["-o", outFile]
