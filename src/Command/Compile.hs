@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings #-}
+{-# LANGUAGE CPP, FlexibleContexts, OverloadedStrings #-}
 module Command.Compile where
 
 import qualified Data.List.NonEmpty as NonEmpty
@@ -109,7 +109,12 @@ compile opts onError onSuccess = case maybe (Right Target.defaultTarget) Target.
     withOutputFile Nothing k
       = withTempFile firstInputDir firstFileName $ \outputFile outputFileHandle -> do
         hClose outputFileHandle
+#ifndef mingw32_HOST_OS
         k outputFile
+#else
+        -- On Windows executable should have suffix @.exe@.
+        k (outputFile <> ".exe")
+#endif
     withOutputFile (Just o) k = do
       o' <- makeAbsolute o
       k o'
